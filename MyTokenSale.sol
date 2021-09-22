@@ -49,34 +49,46 @@ contract MyTokenSale is Crowdsale, Ownable{
           setCurrentRate(0);
         }
     } */
-
-  function setCurrentRate(uint256 _rate) private {
-      Rate = _rate;
+  function CalculateRate() public view returns (uint256) {
+    if(stage == ICOStage.PreSale){
+      return 300000;
+    } else if( stage == ICOStage.secondSale){
+      return 500000;
+    } else{
+      return 400000;
     }
+  }
+
+  /*function setCurrentRate(uint256 _rate) private {
+      Rate = _rate;
+    } */ 
 
 
   function _getTokenAmount(uint256 weiAmount) internal view override returns (uint256){
-        return weiAmount.mul(Rate);
+        return weiAmount.mul(CalculateRate());
   }
 
  
  function _updatePurchasingState(address beneficiary, uint256 weiAmount) internal override{
    if (stage == ICOStage.PreSale) {
-      setCurrentRate(300000);
+      //setCurrentRate(300000);
+      CalculateRate();
       require(preSaleQuantity - weiAmount >= 0);
       preSaleQuantity -= weiAmount;
       if(preSaleQuantity == 0){
         stage = ICOStage.secondSale;
       }
    }else if (stage ==ICOStage.secondSale) {
-      setCurrentRate(600000);
+      //setCurrentRate(600000);
+      CalculateRate();
       require(secondSaleQuantity - weiAmount >= 0);
       secondSaleQuantity -= weiAmount;
       if(secondSaleQuantity == 0){
         stage = ICOStage.remainingSale;
       }
    }else if (stage ==ICOStage.remainingSale) {
-      setCurrentRate(0);
+      //setCurrentRate(0);
+      CalculateRate();
       require(remainingSaleQuantity - weiAmount >= 0);
       remainingSaleQuantity -= weiAmount;
    }
