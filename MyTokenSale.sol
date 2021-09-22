@@ -27,7 +27,7 @@ contract MyTokenSale is Crowdsale, Ownable{
           totalSupply = _totalSupply;
     }
    
-    function setICOStage(uint _stage) public onlyOwner{
+   /* function setICOStage(uint _stage) public onlyOwner{
      
      if(uint(ICOStage.PreSale) == _stage) {
          stage = ICOStage.PreSale;
@@ -40,7 +40,6 @@ contract MyTokenSale is Crowdsale, Ownable{
                 //remainingSaleQuantity = 20000000;
 
             }
-     
      if (stage == ICOStage.PreSale) {
         setCurrentRate(300000);
       } else if (stage == ICOStage.secondSale) {
@@ -49,7 +48,7 @@ contract MyTokenSale is Crowdsale, Ownable{
           // set rate for remainingSale stage
           setCurrentRate(0);
         }
-    }
+    } */
 
   function setCurrentRate(uint256 _rate) private {
       Rate = _rate;
@@ -63,18 +62,21 @@ contract MyTokenSale is Crowdsale, Ownable{
  
  function _updatePurchasingState(address beneficiary, uint256 weiAmount) internal override{
    if (stage == ICOStage.PreSale) {
+      setCurrentRate(300000);
       require(preSaleQuantity - weiAmount >= 0);
       preSaleQuantity -= weiAmount;
       if(preSaleQuantity == 0){
         stage = ICOStage.secondSale;
       }
    }else if (stage ==ICOStage.secondSale) {
+      setCurrentRate(600000);
       require(secondSaleQuantity - weiAmount >= 0);
       secondSaleQuantity -= weiAmount;
       if(secondSaleQuantity == 0){
         stage = ICOStage.remainingSale;
       }
    }else if (stage ==ICOStage.remainingSale) {
+      setCurrentRate(0);
       require(remainingSaleQuantity - weiAmount >= 0);
       remainingSaleQuantity -= weiAmount;
    }
