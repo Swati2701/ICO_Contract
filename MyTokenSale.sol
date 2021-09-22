@@ -6,7 +6,7 @@ import "./CrowdSale.sol";
 
 
 contract MyTokenSale is Crowdsale, Ownable{
-    address payable addr;
+    address beneficiary;
     uint256 preSaleQuantity;
     uint256 secondSaleQuantity;
     uint256 remainingSaleQuantity;
@@ -23,18 +23,22 @@ contract MyTokenSale is Crowdsale, Ownable{
   
     ICOStage public stage = ICOStage.PreSale;
 
-   /* function TotalSupply(uint256 _totalSupply) public{
+    function TotalSupply(uint256 _totalSupply) public{
           totalSupply = _totalSupply;
-      }*/
+    }
    
     function setICOStage(uint _stage) public onlyOwner{
      
      if(uint(ICOStage.PreSale) == _stage) {
          stage = ICOStage.PreSale;
+         //preSaleQuantity = 30000000;
          } else if (uint(ICOStage.secondSale) == _stage) {
              stage = ICOStage.secondSale;
+             //secondSaleQuantity = 50000000;
             } else if(uint(ICOStage.remainingSale) == _stage){
                 stage = ICOStage.remainingSale;
+                //remainingSaleQuantity = 20000000;
+
             }
      
      if (stage == ICOStage.PreSale) {
@@ -42,65 +46,38 @@ contract MyTokenSale is Crowdsale, Ownable{
       } else if (stage == ICOStage.secondSale) {
         setCurrentRate(600000);
       } else {
-           
-           // set rate for remainingSale stage
-            setCurrentRate(0);
+          // set rate for remainingSale stage
+          setCurrentRate(0);
         }
     }
 
-    function setCurrentRate(uint256 _rate) private {
+  function setCurrentRate(uint256 _rate) private {
       Rate = _rate;
     }
-
-    function calculateRate() public payable {
-    uint256 weiAmount = msg.value;
-    uint256 tokenValue = _getTokenAmount(weiAmount);       //msg.value.mul(Rate);
-
-
-    if (stage == ICOStage.PreSale) {
-        require(preSaleQuantity - tokenValue >= 0);
-        //msg.sender.transfer(tokenValue);
-        _forwardFunds();
-        _deliverTokens(addr, tokenValue);
-        preSaleQuantity -= tokenValue;
-        }
-
-     if (stage ==ICOStage.secondSale) {
-        require(secondSaleQuantity - tokenValue >= 0);
-        //msg.sender.transfer(tokenValue);
-        _forwardFunds();
-        _deliverTokens(addr, tokenValue);
-        secondSaleQuantity -= tokenValue;
-            return ;
-        }
-        if (stage ==ICOStage.remainingSale) {
-            require(remainingSaleQuantity - tokenValue >= 0);
-            //msg.sender.transfer(tokenValue);
-            _forwardFunds();
-            _deliverTokens(addr, tokenValue);
-            remainingSaleQuantity -= tokenValue;
-            return ;
-        }
-
-        buyTokens(msg.sender);
-  }
 
 
   function _getTokenAmount(uint256 weiAmount) internal view override returns (uint256){
         return weiAmount.mul(Rate);
   }
 
-   function forwardFunds() internal {
-      if (stage == ICOStage.PreSale) {
-          addr.transfer(msg.value);
-      } else if (stage == ICOStage.secondSale) {
-          addr.transfer(msg.value);
-      } else {
-          super._forwardFunds();
+ 
+ function _updatePurchasingState(address beneficiary, uint256 weiAmount) internal override{
+   if (stage == ICOStage.PreSale) {
+      require(preSaleQuantity - weiAmount >= 0);
+      preSaleQuantity -= weiAmount;
+      if(preSaleQuantity == 0){
+        stage = ICOStage.secondSale;
       }
-  } 
+   }else if (stage ==ICOStage.secondSale) {
+      require(secondSaleQuantity - weiAmount >= 0);
+      secondSaleQuantity -= weiAmount;
+      if(secondSaleQuantity == 0){
+        stage = ICOStage.remainingSale;
+      }
+   }else if (stage ==ICOStage.remainingSale) {
+      require(remainingSaleQuantity - weiAmount >= 0);
+      remainingSaleQuantity -= weiAmount;
+   }
+}
 
-  function _deliverTokens(address beneficiary, uint256 tokenAmount) internal override{
-        tokens.safeTransfer(beneficiary, tokenAmount);
-    }
 }
